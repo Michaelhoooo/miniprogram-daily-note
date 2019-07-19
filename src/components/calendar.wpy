@@ -1,0 +1,149 @@
+<style lang="less">
+.flag{
+  display:flex;
+  flex-direction: column;
+  height: 6px;
+  justify-content: space-between;
+  .flag-item{
+    width: 10px;
+    height: 2px;
+    background: #87CEFA;
+    border-radius: 2px;
+  }
+  .sec{
+    background: #FFD700;
+  }
+}
+.current-day{
+  color: #FFB6C1;
+}
+.nomal{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+.item-border{
+  width:25px;
+  height:25px;
+  line-height:25px;
+}
+.activeDay{
+  border: 1px solid #EDA25A;
+  border-radius: 12.5px;
+}
+.year-month-title{
+  background: #232323;
+  padding: 8px 15px;
+  border-radius: 200px;
+  box-shadow: 0px 2px 6px 0px rgba(0,0,0,0.04);
+}
+.left{
+  transform:rotate(180deg);
+}
+.img-box{
+  display: flex;
+  .img{
+    width: 20px;
+    height: 20px;
+  }
+}
+.item-header{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px 5px 20px;
+}
+.item-contain{
+  display: flex;
+  flex-wrap: wrap;
+}
+.calendar-item{
+  width: calc(100%/7);
+  text-align: center;
+  height: 40px;
+}
+.header{
+    line-height: 40px;
+  }
+</style>
+<template>
+  <view>
+    <view class="item-header" v-if="getList.length !== 0">
+      <view @click="handlePre" class="img-box left">
+        <img src="../assets/img/next.png" class="img">
+      </view>
+      <view class="year-month-title">{{year}}年{{month}}月</view>
+      <view @click="handleNext" class="img-box">
+        <img src="../assets/img/next.png" class="img">
+      </view>
+    </view>
+    <view class="item-contain" v-if="getList.length !== 0">
+      <view wx:for="{{weekDay}}" wx:key="{{index}}" class="calendar-item header">{{item}}</view>
+      <view wx:for="{{getList}}" wx:key="{{index}}" class="calendar-item nomal" @click="handleDayClick" data-item="{{item}}">
+        <view :class="{'activeDay' : currentItem === item.content, 'item-border': true, 'current-day': currentDay === item.content && year === currentYear && month === currentMonth }">
+          {{item.content}}
+        </view>
+        <view class="flag">
+          <view class="flag-item" v-if="flagList[item.content].length === 2 || flagList[item.content][0] === 1"></view>
+          <view class="flag-item sec" v-if="flagList[item.content].length === 2 || flagList[item.content][0] === 2"></view>
+        </view>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from '@wepy/core'
+wepy.component({
+  data: {
+    currentDay: new Date().getDate(),
+    currentYear: new Date().getFullYear(),
+    currentMonth: new Date().getMonth() + 1,
+    currentItem: '',
+    weekDay: [
+      'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'
+    ]
+  },
+  props: {
+    year: {
+      type: Number
+    },
+    month: {
+      type: Number
+    },
+    getList: {
+      type: Array
+    },
+    flagList: {
+      type: Object
+    }
+  },
+  watch: {
+    month() {
+      this.$emit('calculateHeight', this.getList)
+    }
+  },
+  computed: {
+  },
+  methods: {
+    handleDayClick(e) {
+      if (e.$wx.currentTarget.dataset.item.content !== " ") {
+        this.currentItem = e.$wx.currentTarget.dataset.item.content
+        this.$emit('day', this.currentItem)
+      }
+    },
+    handlePre() {
+      this.currentItem = ''
+      this.$emit('pre')
+    },
+    handleNext() {
+      this.currentItem = ''
+      this.$emit('next')
+    }
+  }
+})
+</script>
+
+
+

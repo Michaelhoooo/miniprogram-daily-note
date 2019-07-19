@@ -1,0 +1,37 @@
+<style lang="less">
+page{
+  height: 100%
+}
+</style>
+
+
+<script>
+import wepy from '@wepy/core';
+
+wepy.app({
+  hooks: {
+    'before-setData': function (dirty) {
+      return dirty;
+    }
+  },
+  globalData: {
+    userInfo: null,
+    wx: true
+  },
+  methods: {
+  }
+});
+</script>
+<config>
+{
+    pages: [
+      'pages/index',
+      'pages/edit',
+      'pages/login'
+    ],
+    window: {
+      navigationBarTextStyle: 'white',
+      navigationBarBackgroundColor: '#1F1F1F',
+    }
+}
+</config>

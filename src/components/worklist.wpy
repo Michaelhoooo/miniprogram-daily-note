@@ -1,0 +1,84 @@
+<style lang="less">
+.list-item{
+  padding: 0 20px;
+  display: flex;
+  align-items:center;
+  margin-top: 20px;
+  line-height: 30px;
+}
+.flag-item{
+  width: 2px;
+  height: 10px;
+  background: #87CEFA;
+  border-radius: 2px;
+}
+.flag-item-spec{
+  width: 2px;
+  height: 10px;
+  background: #FFD700;
+  border-radius: 2px;
+}
+.item-title{
+  color: #D2B48C;
+  margin-left: 10px;
+  font-size: 14px;
+  font-weight: 300;
+}
+.flag-box{
+  display: flex;
+  align-items:center;
+}
+.item-content{
+  margin-left: 10px;
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow:ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  background:#333;
+  border-radius:20px;
+  padding-left:10px;
+}
+.nocontent{
+  font-size: 14px;
+  color: #ccc;
+  display: flex;
+  justify-content: center;
+  margin-top: 50px;
+}
+</style>
+<template>
+  <view>
+    <view v-for="item in worklist" class="list-item"  v-if="worklist.length !== 0" @click="handleItem(item)">
+      <view class="flag-box" v-if="item.flag == 1">
+        <view class="flag-item"></view>
+      </view>
+      <view class="flag-box" v-if="item.flag == 2">
+        <view class="flag-item-spec"></view>
+      </view>
+      <view class="item-content">
+        {{item.content}}
+      </view>
+    </view>
+  </view>
+</template>
+
+<script>
+  import wepy from '@wepy/core'
+
+  wepy.component({
+    data: {
+    },
+    props: {
+      worklist: Array,
+    },
+    methods: {
+      handleItem(item) {
+        wx.navigateTo({
+          url: 'edit?id=' + item._id
+        })
+      }
+    }
+  });
+</script>
+

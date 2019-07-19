@@ -1,0 +1,13 @@
+{
+    "pages": [
+        "pages/index",
+        "pages/edit",
+        "pages/login"
+    ],
+    "window": {
+        "navigationBarTextStyle": "white",
+        "navigationBarBackgroundColor": "#1F1F1F"
+    },
+    "component": true,
+    "usingComponents": {}
+}

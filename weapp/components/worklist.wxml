@@ -1,0 +1,14 @@
+
+<view>
+  <view wx:for="{{ worklist }}" wx:for-index="index" wx:for-item="item" wx:key="index" wx:if="{{ worklist.length !== 0 }}" data-wpy-evt="8-0" bindtap="_proxy" data-wpytap-a="{{ item }}" class="list-item">
+    <view wx:if="{{ item.flag == 1 }}" class="flag-box">
+      <view class="flag-item"></view>
+    </view>
+    <view wx:if="{{ item.flag == 2 }}" class="flag-box">
+      <view class="flag-item-spec"></view>
+    </view>
+    <view class="item-content">
+      {{item.content}}
+    </view>
+  </view>
+</view>

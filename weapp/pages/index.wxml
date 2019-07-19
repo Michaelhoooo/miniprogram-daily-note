@@ -1,0 +1,17 @@
+
+<view class="page-contain">
+  <view id="calendar-box">
+    <calendar bind_init="_initComponent" year="{{ year }}" month="{{ month }}" getList="{{ getList }}" flagList="{{ flagList }}" data-wpy-evt="2-0" bindcalculateHeight="_proxy" bindpre="_proxy" bindnext="_proxy" bindday="_proxy"></calendar>
+  </view>
+  <view class=" {{ [ !heigthFlag ? 'minHeight' : '',heigthFlag ? 'maxHeight' : '' ] }}">
+    <worklist bind_init="_initComponent" worklist="{{ worklist }}"></worklist>
+  </view>
+  <view wx:if="{{ show }}" class="img-contain">
+    <view class="img-box">
+      <image src="{{ headerImg }}" class="img header">
+    </image></view>
+    <view data-wpy-evt="2-4" bindtap="_proxy" class="img-box">
+      <image src="../assets/img/add.png" class="img">
+    </image></view>
+  </view>
+</view>

@@ -1,0 +1,276 @@
+<template>
+  <view class="edit-contain">
+    <view class="edit-item">
+      时间：{{currentYear}}/{{currentMonth}}/{{currentDay}}
+    </view>
+    <view class="edit-item">
+      用户：{{userInfo.nickName}}
+    </view>
+    <view>
+      <radio-group class="radio-group" bindchange="radioChange">
+        <span>选择标识：</span>
+        <view wx:for="{{items}}" wx:key="{{index}}" class="item-box-contain">
+          <radio value="{{item.value}}" checked="{{item.value == radioValue ? 'true' : 0}}" color="{{item.color}}"/>
+          <view class="rangle" style="{{ 'background:'+ item.color }}"></view>
+        </view>
+      </radio-group>
+    </view>
+    <view class="edit-item text" v-if="show">
+      <textarea value="{{content}}" placeholder="show time..." auto-focus show-confirm-bar bindinput="bindinput"/>
+    </view>
+    <view class="btn">
+      <button v-if="id" class="item" @click="handleDelete">删除</button>
+      <button class="item" @click="handleSubmit">提交</button>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from '@wepy/core'
+
+wepy.page({
+  data: {
+    id: '',
+    currentDay: new Date().getDate(),
+    currentYear: new Date().getFullYear(),
+    currentMonth: new Date().getMonth() + 1,
+    content: '',
+    radioValue: 1,
+    items: [
+      {
+        value: 1,
+        color: '#87CEFA'
+      }, {
+        value: 2,
+        color: '#FFD700',
+      }
+    ],
+    show: false
+  },
+  onLoad(option){
+    wx.cloud.callFunction({
+      name: 'michael',
+      success: res => {
+        this.show = res.result
+      },
+    })
+    this.id = option.id
+    if (this.id) {
+      this.showloading()
+      wx.cloud.callFunction({
+        name: 'getDetail',
+        data: {
+          id: this.id
+        },
+        success: res => {
+          console.log('[云函数] [getDetail]: ', res.result)
+          let data = res.result.data
+          this.currentDay = data.day
+          this.currentYear = data.year
+          this.currentMonth = data.month
+          this.content = data.content
+          this.radioValue = data.flag
+          this.hideloading()
+        },
+        fail: err => {
+          this.hideloading()
+          wx.showModal({
+              title: '警告',
+              content: '服务异常，请重新调用[getDetail]',
+              showCancel: false,
+              confirmText: '确定',
+              success: function(res) {
+                if (res.confirm) {
+                  wx.navigateBack({
+                    delta: 1
+                  })
+                }
+              }
+          });
+        }
+      })
+    } else {
+      this.currentDay = option.day
+      this.currentYear = option.year
+      this.currentMonth = option.month
+    }
+  },
+  computed: {
+    userInfo() {
+      return this.$app.$options.globalData.userInfo
+    },
+  },
+  methods: {
+    handleDelete() {
+      let that = this
+      wx.showModal({
+          title: '温馨提示',
+          content: '确定删除吗',
+          showCancel: true,
+          confirmText: '确定',
+          success: function(res) {
+              if (res.confirm) {
+                that.showloading()
+                wx.cloud.callFunction({
+                  name: 'delete',
+                  data: {
+                    id: that.id
+                  },
+                  success: res => {
+                    console.log('[云函数] [delete]: ', res.result)
+                    that.hideloading()
+                    wx.navigateBack({
+                      delta: 1
+                    })
+                  },
+                  fail: err => {
+                    that.hideloading()
+                    wx.showModal({
+                        title: '温馨提示',
+                        content: '服务异常，请重新调用[delete]',
+                        showCancel: false,
+                        confirmText: '确定',
+                        success: function(res) {
+                          if (res.confirm) {
+                            wx.navigateBack({
+                              delta: 1
+                            })
+                          }
+                        }
+                    });
+                  }
+                })
+              }
+          }
+      });
+    },
+    showloading() {
+      wx.showLoading({
+        mask: true
+      })
+    },
+    hideloading() {
+      wx.hideLoading()
+    },
+    radioChange(e) {
+      this.radioValue = e.$wx.detail.value
+      console.log('radio发生change事件，携带value值为：', e.$wx.detail.value)
+    },
+    bindinput(e) {
+      this.content = e.$wx.detail.value
+    },
+    handleSubmit() {
+      if (!this.content) {
+        return
+      }
+      this.showloading()
+      let payload = {
+        content: this.content,
+        flag: this.radioValue,
+        year: this.currentYear,
+        month: this.currentMonth,
+        day: this.currentDay,
+        userName: this.userInfo.nickName,
+        openId: this.userInfo.openid
+      }
+      if (this.id) {
+        payload.id = this.id
+      }
+      wx.cloud.callFunction({
+        name: 'createContent',
+        data: payload,
+        success: res => {
+          this.hideloading()
+          console.log('[云函数] [createContent] user openid: ', res.result)
+          if(res.result.code === 200){
+            wx.navigateBack({
+              delta: 1
+            })
+          }
+        },
+        fail: err => {
+          this.hideloading()
+          wx.showModal({
+              title: '警告',
+              content: '服务异常，请重新调用',
+              showCancel: false,
+              confirmText: '确定',
+              success: function(res) {
+                  if (res.confirm) {
+                    wx.navigateBack({
+                      delta: 1
+                    })
+                  }
+              }
+          });
+        }
+      })
+    }
+  }
+})
+</script>
+
+<style lang="less">
+page{
+  background-color: #1F1F1F;
+  color: #D6D6D6;
+  font-size: 14px;
+  font-weight: 300;
+}
+.rangle{
+  width: 20px;
+  height: 10px;
+  background: #fff;
+  border-radius: 4px;
+}
+.item-box-contain{
+  display: flex;
+  align-items:center;
+  margin-right: 20px;
+}
+.radio-group{
+  display: flex;
+  align-items:center;
+  margin-top: 18px;
+  radio{
+    transform: scale(0.7)
+  }
+}
+.btn{
+  margin-top: 20px;
+  font-size: 16px;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  .item{
+    background: #333;
+    color: #D6D6D6;
+    line-height: 30px;
+    width: 80px;
+    text-align: center;
+    border-radius: 8px;
+  }
+}
+.text{
+  border: 1px solid #D6D6D6;
+  border-radius: 8px;
+  height: 65%;
+}
+textarea{
+  width: 100%;
+  font-weight: 400;
+  height: 100%;
+}
+.edit-contain{
+  padding: 0 20px 0 20px;
+  height: 100%;
+  .edit-item{
+    margin-top: 20px;
+  }
+}
+</style>
+<config>
+{
+  backgroundColor: '#1F1F1F',
+}
+</config>

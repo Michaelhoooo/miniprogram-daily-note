@@ -1,0 +1,328 @@
+<style lang="less">
+page{
+  background-color: #1F1F1F;
+  color: #D6D6D6;
+}
+.page-contain{
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+#calendar-box{
+  position: fixed;
+  top: 0;
+  left: 0;
+  background: #1F1F1F;
+  border-bottom: 1px solid #333;
+}
+.minHeight{
+  margin-top: 293px;
+  padding-bottom: 65px;
+}
+.maxHeight{
+  margin-top: 333px;
+  padding-bottom: 65px;
+}
+.img-box{
+  display: flex;
+  background:#333333;
+  width: 40px;
+  height: 40px;
+  border-radius: 40px;
+  align-items:center;
+  justify-content:center;
+  margin: 0 20px;
+  .img{
+    width: 30px;
+    height: 30px;
+  }
+}
+.img-contain{
+  position: fixed;
+  bottom:30px;
+  display:flex;
+  width:100%;
+  justify-content:space-between;
+}
+.header {
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 40px;
+}
+</style>
+<template>
+  <view class="page-contain">
+    <view id="calendar-box">
+      <calendar @calculateHeight="calculateHeight" @pre="handlePre" @next="handleNext" :year="year" :month="month" :getList="getList" @day="getDay" :flagList="flagList"></calendar>
+    </view>
+    <view :class="{ 'minHeight': !heigthFlag , 'maxHeight': heigthFlag}">
+      <worklist :worklist="worklist"></worklist>
+    </view>
+    <view class="img-contain" v-if="show">
+      <view class="img-box">
+        <img :src="headerImg" class="img header">
+      </view>
+      <view class="img-box" @click="handleAdd(false)">
+        <img src="../assets/img/add.png" class="img">
+      </view>
+    </view>
+  </view>
+</template>
+
+<script>
+  import wepy from '@wepy/core'
+
+  wepy.page({
+    data: {
+      list: [],
+      worklist: [],
+      year: new Date().getFullYear(),
+      month: new Date().getMonth() + 1,
+      day: new Date().getDate(),
+      headerImg: '',
+      flagList: {},
+      show: false,
+    },
+    onLoad() {
+      wx.cloud.init()
+    },
+    onShow() {
+      wx.cloud.callFunction({
+        name: 'michael',
+        success: res => {
+          this.show = res.result
+          if (this.show) {
+            if (this.$app.$options.globalData.userInfo && this.$app.$options.globalData.userInfo.openid) {
+              this.headerImg = this.$app.$options.globalData.userInfo.avatarUrl
+              this.getAllList()
+              this.getWorkList()
+              return
+            } else {
+              this.getUserInfo()
+            }
+          }
+        },
+      })
+    },
+    computed: {
+      heigthFlag() {
+        if (this.list.length === 35) {
+          return false
+        } else {
+          return true
+        }
+      },
+      getList() {
+        let year = this.year
+        let month = this.month - 1
+        let daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        if ((year % 4 === 0 && year % 100 !== 0) || year % 400 === 0) {
+            daysInMonth[1] = 29;
+        }
+        // 获得指定年月的1号是星期几
+        let targetDay = new Date(year, month, 1).getDay();
+        // 将要在calendar__main中渲染的列表
+        let total_calendar_list = [];
+        let preNum = targetDay;
+        // 首先先说一下，我们的日期是(日--六)这个顺序也就是(0--6)
+        // 有了上述的前提我们可以认为targetDay为多少，我们就只需要在total_calendar_list的数组中push几个content为''的obj作为占位
+        if (targetDay > 0) {
+            for (let i = 0; i < preNum; i++) {
+                let obj = {
+                    type: "pre",
+                    content: " "
+                };
+                total_calendar_list.push(obj);
+            }
+        }
+        for (let i = 0; i < daysInMonth[month]; i++) {
+              let obj = {
+                  type: "normal",
+                  content: i + 1
+              };
+                  total_calendar_list.push(obj);
+          }
+        let nextNum = 6 - new Date(year, month+1, 0).getDay()
+        // 与上面的type=pre同理
+        for (let i = 0; i < nextNum; i++) {
+            let obj = {
+                type: "next",
+                content: " "
+            };
+            total_calendar_list.push(obj);
+        }
+        this.list = total_calendar_list
+        return total_calendar_list;
+      }
+    },
+    methods: {
+      getAllList() {
+        let payload = {
+          openId: this.$app.$options.globalData.userInfo.openid,
+          year: this.year,
+          month: this.month,
+        }
+        wx.cloud.callFunction({
+          name: 'getall',
+          data: payload,
+          success: res => {
+            console.log('[云函数] [getalllist] user openid: ', res.result)
+            this.flagList = res.result
+          },
+          fail: err => {
+            wx.showModal({
+              title: '警告',
+              content: '服务异常，请重新调用[getalllist]',
+              showCancel: false,
+              confirmText: '确定',
+              success: function(res) {
+                if (res.confirm) {
+                  return
+                }
+              }
+            });
+          }
+        })
+      },
+      showloading() {
+        wx.showLoading({
+          mask: true
+        })
+      },
+      hideloading() {
+        wx.hideLoading()
+      },
+      getDay(currentItem) {
+        this.day = currentItem
+        if (this.$app.$options.globalData.userInfo && this.$app.$options.globalData.userInfo.openid) {
+          this.getWorkList()
+        }
+      },
+      getWorkList() {
+        this.showloading()
+        let payload = {
+          openId: this.$app.$options.globalData.userInfo.openid,
+          year: this.year,
+          month: this.month,
+          day: this.day
+        }
+        console.log(payload)
+        wx.cloud.callFunction({
+            name: 'getlist',
+            data: payload,
+            success: res => {
+              console.log('[云函数] [getlist] user openid: ', res.result.data)
+              this.worklist = res.result.data
+              this.hideloading()
+            },
+            fail: err => {
+              this.hideloading()
+              wx.showModal({
+                title: '警告',
+                content: '服务异常，请重新调用[getlist]',
+                showCancel: false,
+                confirmText: '确定',
+                success: function(res) {
+                  if (res.confirm) {
+                    return
+                  }
+                }
+              });
+            }
+          })
+      },
+      getUserInfo() {
+        let that = this
+        this.showloading()
+        wx.getSetting({
+          success: function(res) {
+            if (res.authSetting['scope.userInfo']) {
+              wx.getUserInfo({
+                success: function(res) {
+                  console.log(res)
+                  let userInfo = res.userInfo
+                  wx.cloud.callFunction({
+                    name: 'login',
+                    data: {},
+                    success: res => {
+                      console.log('[云函数] [login] user openid: ', res.result.openid)
+                      userInfo.openid = res.result.openid
+                      that.$app.$options.globalData.userInfo = userInfo
+                      that.headerImg = userInfo.avatarUrl
+                      that.getWorkList()
+                      that.getAllList()
+                    },
+                    fail: err => {
+                      wx.showModal({
+                        title: '警告',
+                        content: '服务异常，请重新调用[login]',
+                        showCancel: false,
+                        confirmText: '确定',
+                        success: function(res) {
+                          if (res.confirm) {
+                            return
+                          }
+                        }
+                      });
+                    }
+                  })
+                }
+              });
+            } else {
+              that.hideloading()
+            }
+          }
+        })
+      },
+      handleAdd(flag) {
+        if (this.$app.$options.globalData.userInfo && this.$app.$options.globalData.userInfo.openid) {
+          wx.navigateTo({
+            url: `edit?day=${this.day}&year=${this.year}&month=${this.month}`
+          })
+        } else {
+          wx.navigateTo({
+            url: 'login'
+          })
+        }
+
+      },
+      handleNext() {
+        this.worklist = []
+        this.flagList = []
+        if (this.month === 12) {
+          this.year = this.year + 1
+          this.month = 1
+        } else {
+          this.month = this.month + 1
+        }
+        this.getAllList()
+      },
+      handlePre() {
+        this.worklist = []
+        this.flagList = []
+        if (this.month === 1) {
+          this.year = this.year - 1
+          this.month = 12
+        } else {
+          this.month = this.month  - 1
+        }
+        this.getAllList()
+      },
+      calculateHeight(list) {
+        this.list = list
+      }
+    },
+    onReady(){
+    },
+  });
+</script>
+<config>
+{
+    navigationBarTitleText: 'YoHooooo',
+    backgroundColor: '#1F1F1F',
+    usingComponents: {
+      calendar: "../components/calendar.wpy",
+      worklist: "../components/worklist.wpy",
+    }
+}
+</config>

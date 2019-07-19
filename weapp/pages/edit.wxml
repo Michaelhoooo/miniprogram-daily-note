@@ -1,0 +1,25 @@
+
+<view class="edit-contain">
+  <view class="edit-item">
+    时间：{{currentYear}}/{{currentMonth}}/{{currentDay}}
+  </view>
+  <view class="edit-item">
+    用户：{{userInfo.nickName}}
+  </view>
+  <view>
+    <radio-group data-wpy-evt="3-0" bindchange="_proxy" class="radio-group">
+      <label>选择标识：</label>
+      <view wx:for="{{items}}" wx:key="{{index}}" class="item-box-contain">
+        <radio value="{{item.value}}" checked="{{item.value == radioValue ? 'true' : 0}}" color="{{item.color}}"></radio>
+        <view style="{{ 'background:'+ item.color }}" class="rangle"></view>
+      </view>
+    </radio-group>
+  </view>
+  <view wx:if="{{ show }}" class="edit-item text">
+    <textarea value="{{content}}" placeholder="show time..." auto-focus="" show-confirm-bar="" data-wpy-evt="3-1" bindinput="_proxy"></textarea>
+  </view>
+  <view class="btn">
+    <button wx:if="{{ id }}" data-wpy-evt="3-2" bindtap="_proxy" class="item">删除</button>
+    <button data-wpy-evt="3-3" bindtap="_proxy" class="item">提交</button>
+  </view>
+</view>

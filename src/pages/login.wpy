@@ -1,0 +1,97 @@
+<template>
+  <view class="contain-box">
+    <view class="img-box">
+      <img src="../assets/img/wechat.png" class="img">
+    </view>
+    <view class="content-box" v-if="canIUse">
+      <view class="frist-title">
+        申请获取以下权限:
+      </view>
+      <view class="sec-title">
+        获得您的公开信息（昵称，头像等）
+      </view>
+      <button class="bottom" type="primary" open-type="getUserInfo" lang="zh_CN" bindgetuserinfo="bindGetUserInfo">
+        授权登录
+      </button>
+    </view>
+    <view v-else>
+      请升级微信版本
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from '@wepy/core'
+wepy.page({
+  data: {
+    canIUse: wx.canIUse('button.open-type.getUserInfo')
+  },
+  methods: {
+    bindGetUserInfo(e) {
+      if (e.$wx.detail.userInfo) {
+        wx.navigateBack({
+          delta: 1
+        })
+      } else {
+        wx.showModal({
+            title: '警告',
+            content: '您点击了拒绝授权，将无法进入小程序，请授权之后再进入!!!',
+            showCancel: false,
+            confirmText: '返回授权',
+            success: function(res) {
+                if (res.confirm) {
+                  return
+                }
+            }
+        });
+      }
+    }
+  }
+})
+</script>
+
+<style lang="less">
+page{
+  background-color: #1F1F1F;
+  color: #D6D6D6;
+}
+.contain-box{
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.content-box{
+  width: 80%;
+  margin-bottom: 200px;
+  border-top: 0.5px solid #eee;
+  padding-top:50px;
+  .frist-title{
+    font-size: 18px;
+  }
+  .sec-title{
+    font-size: 14px;
+    font-weight: 300;
+    margin-top: 10px;
+  }
+  .bottom{
+    border-radius: 80px;
+    margin-top: 50px;
+  }
+}
+.img-box{
+  text-align:center;
+  margin-bottom: 30px;
+  .img{
+    width: 100px;
+    height: 100px;
+  }
+}
+</style>
+<config>
+{
+    navigationBarTitleText: '微信授权',
+    backgroundColor: '#1F1F1F',
+}
+</config>
